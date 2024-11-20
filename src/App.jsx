@@ -15,6 +15,8 @@ import TokenInvalidPage from "./pages/TokenInvalidPage";
 import { useSelector } from "react-redux";
 import AdminLeavePage from "./pages/AdminLeavePage";
 import EmployeeLeavePage from "./pages/EmployeeLeavePage";
+import AddLeavePage from "./pages/AddLeavePage";
+import ViewOrUpdateLeavePage from "./pages/ViewOrUpdateLeavePage";
 
 function App() {
   const userRole = useSelector((state) => state.user.user?.data?.role);
@@ -65,8 +67,11 @@ function App() {
         { path: "/dashboard", element: getDashboardPage() }, // Dynamically render based on role
         { path: "/employees", element: <EmployeePage /> },
         { path: "/leaves", element: getLeavePage() },
+        { path: "//add-leave", element: <AddLeavePage /> },
+        { path: "/request-leave", element: <AddLeavePage /> },
         { path: "/add-employee", element: <AddEmployeePage /> },
         { path: "/view-update-employee/:id", element: <ViewOrUpdatePage /> },
+        { path: "/view-update-leave/:id", element: <ViewOrUpdateLeavePage /> },
       ],
     },
   ]);

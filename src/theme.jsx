@@ -110,6 +110,33 @@ const theme = createTheme({
         },
       },
     },
+    MuiSelect: {
+      styleOverrides: {
+        root: {
+          borderRadius: 6,
+          "& .MuiOutlinedInput-notchedOutline": {
+            borderColor: "#f5f5f5",
+          },
+          "&:hover .MuiOutlinedInput-notchedOutline": {
+            borderColor: "#ffffff",
+          },
+          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+            borderColor: "#ffd166",
+          },
+          "& .MuiSvgIcon-root": {
+            color: "#ffd166",
+          },
+        },
+        select: {
+          backgroundColor: "#000e32",
+          padding: "10px 14px",
+          borderRadius: 6,
+          "&:focus": {
+            backgroundColor: "#000e32",
+          },
+        },
+      },
+    },
   },
 });
 

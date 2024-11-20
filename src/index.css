@@ -11,3 +11,16 @@ input:-webkit-autofill:active {
   -webkit-box-shadow: 0 0 0 30px #000e32 inset !important;
   -webkit-text-fill-color: #ffffff !important;
 }
+
+::-webkit-scrollbar {
+  width: 8px; /* Remove the quotes around the value */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #ffd166; /* Corrected syntax for the property name and removed quotes */
+  border-radius: 8px; /* Corrected syntax */
+}
+
+::-webkit-scrollbar-track {
+  background-color: #1d3557; /* Corrected syntax */
+}

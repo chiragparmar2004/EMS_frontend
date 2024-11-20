@@ -358,5 +358,5 @@ const ProtectedLayout = () => {
 
 // export default ProtectedLayout;
 
-export default Layout;
 export { ProtectedLayout };
+export default Layout;

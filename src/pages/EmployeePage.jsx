@@ -96,8 +96,6 @@ const EmployeePage = () => {
   const { loading, error } = useSelector(
     (state) => state.employee.employeesActions.fetchAll
   );
-  console.log("🚀 ~ EmployeePage ~ error:", error);
-  console.log("🚀 ~ EmployeePage ~ loading:", loading);
 
   useEffect(() => {
     const loadEmployees = async () => {
