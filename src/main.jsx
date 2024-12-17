@@ -9,13 +9,13 @@ import { store, persistor } from ".//store/store.js";
 import { PersistGate } from "redux-persist/integration/react";
 
 createRoot(document.getElementById("root")).render(
-  <StrictMode>
-    <ThemeProvider theme={theme}>
-      <Provider store={store}>
-        <PersistGate loading={null} persistor={persistor}>
-          <App />
-        </PersistGate>
-      </Provider>
-    </ThemeProvider>
-  </StrictMode>
+  //<StrictMode>
+  <ThemeProvider theme={theme}>
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        <App />
+      </PersistGate>
+    </Provider>
+  </ThemeProvider>
+  //</StrictMode>
 );

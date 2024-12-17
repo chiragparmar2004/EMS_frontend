@@ -9,11 +9,9 @@ import {
   IconButton,
   InputAdornment,
 } from "@mui/material";
-
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
-
 import { showSnackbar } from "../store/slices/snackbar.slice";
 import {
   checkResetToken,
@@ -22,46 +20,65 @@ import {
 } from "../store/slices/user.slice";
 
 const PasswordCreationPage = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const location = useLocation();
+
+  // Get authentication status and resetToken from Redux
+  const user = useSelector((state) => state.user);
+  const isAuthenticated = user.user.isAuthenticated;
+  const reduxToken = user.auth.token;
+  console.log("🚀 ~ PasswordCreationPage ~ user:", user);
+
+  // Get token from the URL query parameters
   const searchParams = new URLSearchParams(location.search);
-  const token = searchParams.get("token");
+  const urlToken = searchParams.get("token");
+  const token = urlToken || reduxToken; // Use token from URL if available, otherwise fallback to Redux token
+
   console.log("🚀 ~ PasswordCreationPage ~ token:", token);
 
   const [showPassword, setShowPassword] = useState({
     password: false,
     confirmPassword: false,
   });
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchTokenStatus = async () => {
-      try {
-        const response = await dispatch(checkResetToken({ token }));
+    // If user is authenticated, skip the token validation check
+    if (isAuthenticated) {
+      return;
+    }
 
-        // Log the response for debugging
-        console.log("🚀 ~ fetchTokenStatus ~ response:", response);
+    // If user is not authenticated or no token is available, redirect to login or error page
+    if (!token) {
+      navigate("/login");
+    } else {
+      const fetchTokenStatus = async () => {
+        try {
+          const response = await dispatch(checkResetToken({ token }));
 
-        // Check if the status is 200
-        if (response?.meta?.requestStatus === "fulfilled") {
-          console.log("Token is valid");
-          // You can stay on the current page or perform additional actions here
-        } else {
-          // If response is not successful, navigate to the error page
-          console.log("Token is invalid or expired, redirecting...");
+          // Log the response for debugging
+          console.log("🚀 ~ fetchTokenStatus ~ response:", response);
+
+          // Check if the status is 200
+          if (response?.meta?.requestStatus === "fulfilled") {
+            console.log("Token is valid");
+          } else {
+            // If response is not successful, navigate to the error page
+            console.log("Token is invalid or expired, redirecting...");
+            navigate("/create-password-token-invalid");
+          }
+        } catch (error) {
+          console.error("Error checking token:", error);
           navigate("/create-password-token-invalid");
         }
-      } catch (error) {
-        console.error("Error checking token:", error);
-        // Navigate to an error page in case of any issues with the fetch
-        navigate("/create-password-token-invalid");
-      }
-    };
+      };
 
-    fetchTokenStatus();
-  }, [dispatch, navigate, token]);
+      fetchTokenStatus();
+    }
+  }, [dispatch, navigate, token, isAuthenticated]);
 
   const validationSchema = Yup.object({
+    currentPassword: Yup.string().required("Current Password is required"),
     password: Yup.string()
       .required("Password is required")
       .matches(/[a-z]/, "Password must contain at least one lowercase letter")
@@ -79,6 +96,7 @@ const PasswordCreationPage = () => {
 
   const formik = useFormik({
     initialValues: {
+      currentPassword: "",
       password: "",
       confirmPassword: "",
     },
@@ -87,8 +105,10 @@ const PasswordCreationPage = () => {
       try {
         const resultAction = await dispatch(
           setPassword({
-            token: token,
+            token: token, // Use the final token here
+            currentPassword: values.currentPassword,
             password: values.password,
+            isAuthenticated,
           })
         );
 
@@ -151,6 +171,37 @@ const PasswordCreationPage = () => {
       <Typography variant="h5" align="center">
         Create Password
       </Typography>
+      {isAuthenticated && (
+        <TextField
+          label="Current Password"
+          type={showPassword.currentPassword ? "text" : "password"}
+          name="currentPassword"
+          value={formik.values.currentPassword}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          error={
+            formik.touched.currentPassword &&
+            Boolean(formik.errors.currentPassword)
+          }
+          helperText={
+            formik.touched.currentPassword && formik.errors.currentPassword
+          }
+          fullWidth
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={() => handleClickShowPassword("currentPassword")}
+                  edge="end"
+                  sx={{ color: "text.primary" }}
+                >
+                  {showPassword.password ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
+      )}
 
       <TextField
         label="Password"

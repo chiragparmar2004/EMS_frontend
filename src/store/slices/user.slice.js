@@ -84,11 +84,16 @@ export const resetPassword = createAsyncThunk(
 
 export const setPassword = createAsyncThunk(
   "user/setPassword",
-  async ({ token, password }, { rejectWithValue }) => {
+  async (
+    { token, currentPassword, password, isAuthenticated },
+    { rejectWithValue }
+  ) => {
     try {
       const response = await apiRequest().post(`/auth/create-password`, {
         token,
+        currentPassword,
         password,
+        isAuthenticated,
       });
       return response.data;
     } catch (error) {

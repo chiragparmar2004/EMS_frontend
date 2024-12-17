@@ -4,23 +4,24 @@
   box-sizing: border-box;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
+
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 30px #000e32 inset !important;
+  -webkit-box-shadow: 0 0 0 30px #1d1c1c inset !important;
   -webkit-text-fill-color: #ffffff !important;
 }
 
 ::-webkit-scrollbar {
-  width: 8px; /* Remove the quotes around the value */
+  width: 8px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #ffd166; /* Corrected syntax for the property name and removed quotes */
-  border-radius: 8px; /* Corrected syntax */
+  background-color: #1976d2;
+  border-radius: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background-color: #1d3557; /* Corrected syntax */
+  background-color: #1d1c1c;
 }

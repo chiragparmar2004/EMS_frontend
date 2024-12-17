@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import {
   deleteEmployee,
   fetchEmployeeById,
@@ -22,6 +23,8 @@ import { format } from "date-fns";
 import EmployeeForm from "../components/EmployeeForm";
 import { showSnackbar } from "../store/slices/snackbar.slice.js";
 import { resendVerificationEmail } from "../store/slices/user.slice.js";
+import App from "../App.jsx";
+import ConfirmationPopUp from "../components/ConfirmationPopUp.jsx";
 
 const ViewOrUpdatePage = () => {
   const { id } = useParams();
@@ -32,7 +35,6 @@ const ViewOrUpdatePage = () => {
   const [isResending, setIsResending] = useState(false);
 
   console.log("🚀 ~ ViewOrUpdatePage ~ id:", id);
-  // const employee = useSelector((state) => state.employee.employees.employee);
   const handleResendEmail = async () => {
     setIsResending(true); // Set loading state to true
     try {
@@ -67,6 +69,10 @@ const ViewOrUpdatePage = () => {
     }
   };
 
+  const handleBackClick = () => {
+    navigate(-1);
+  };
+
   const { data: employee, loading } = useSelector(
     (state) => state.employee.employeesActions.fetchById
   );
@@ -79,6 +85,7 @@ const ViewOrUpdatePage = () => {
   const handleDelete = async () => {
     try {
       const resultAction = await dispatch(deleteEmployee(id));
+      console.log("🚀 ~ handleDelete ~ resultAction:", resultAction);
 
       if (deleteEmployee.fulfilled.match(resultAction)) {
         dispatch(
@@ -87,7 +94,7 @@ const ViewOrUpdatePage = () => {
             severity: "success",
           })
         );
-        navigate("/employeePage");
+        navigate("/employees");
       } else if (deleteEmployee.rejected.match(resultAction)) {
         dispatch(
           showSnackbar({
@@ -132,7 +139,25 @@ const ViewOrUpdatePage = () => {
   }
 
   return (
-    <Container maxWidth="md">
+    <Container maxWidth="md" overflow="auto">
+      <Box sx={{ mb: 3, display: "flex", justifyContent: "flex-start" }}>
+        <Button
+          variant="outlined"
+          color="primary"
+          onClick={handleBackClick}
+          sx={{
+            fontWeight: "bold",
+            borderWidth: 1,
+            display: "flex",
+            alignItems: "center",
+            gap: 1, // Adds space between the icon and text
+          }}
+        >
+          <ArrowBackIcon />
+          Back
+        </Button>
+      </Box>
+
       {isEditing ? (
         <EmployeeForm
           isEdit={true}
@@ -234,25 +259,17 @@ const ViewOrUpdatePage = () => {
         </Paper>
       )}
 
-      <Dialog
+      <ConfirmationPopUp
         open={openDeleteDialog}
-        onClose={() => setOpenDeleteDialog(false)}
-      >
-        <DialogTitle color="text.contrastText">
-          Are you sure you want to delete this employee?
-        </DialogTitle>
-        <DialogActions>
-          <Button
-            onClick={() => setOpenDeleteDialog(false)}
-            variant="contained"
-          >
-            Cancel
-          </Button>
-          <Button onClick={handleDelete} color="error" variant="contained">
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+        setOpen={setOpenDeleteDialog}
+        title="Delete Employee"
+        content="Are you sure you want to delete this employee? This action cannot be undone."
+        type="error"
+        onAgree={handleDelete}
+        onDisagree={() => setOpenDeleteDialog(false)}
+        agreeText="Delete"
+        disagreeText="Cancel"
+      />
     </Container>
   );
 };

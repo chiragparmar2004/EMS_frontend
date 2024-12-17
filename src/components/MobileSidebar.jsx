@@ -10,34 +10,44 @@ import {
 } from "@mui/material";
 import { Link, useLocation } from "react-router-dom";
 import { Close as CloseIcon } from "@mui/icons-material";
+import { useSelector } from "react-redux";
 
 const MobileSidebar = ({ drawerOpen, closeDrawer }) => {
   const location = useLocation();
   const [selectedPath, setSelectedPath] = useState(location.pathname);
+  const { data } = useSelector((state) => state.user.user); // Accessing user's role
 
   useEffect(() => {
-    closeDrawer();
     setSelectedPath(location.pathname);
+    closeDrawer();
   }, [location]);
 
+  // Define menu items with role filtering
   const menuItems = [
     {
       text: "Dashboard",
       path: "/dashboard",
+      hoverColor: "rgba(255, 209, 102, 0.1)", // primary main with opacity
+      roles: ["admin", "employee"], // Accessible by both roles
     },
     {
       text: "Employees",
       path: "/employees",
+      hoverColor: "rgba(69, 123, 157, 0.1)", // secondary main with opacity
+      roles: ["admin"], // Only accessible by admin
     },
     {
-      text: "Tasks",
-      path: "/tasks",
-    },
-    {
-      text: "Settings",
-      path: "/settings",
+      text: "Leaves",
+      path: "/leaves",
+      hoverColor: "rgba(67, 153, 111, 0.1)", // success main with opacity
+      roles: ["admin", "employee"], // Accessible by both roles
     },
   ];
+
+  // Filter menu items based on the user's role
+  const filteredMenuItems = menuItems.filter((item) =>
+    item.roles.includes(data.role)
+  );
 
   return (
     <Drawer
@@ -63,12 +73,10 @@ const MobileSidebar = ({ drawerOpen, closeDrawer }) => {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            p: 1,
-            textAlign: "center",
-            borderColor: "divider",
-            mb: 3,
-            backgroundColor: "primary.main", // Background color for logo area
+            p: 1.5,
+            backgroundColor: "primary.main",
             borderRadius: "4px",
+            mb: 2,
           }}
         >
           <Typography
@@ -80,25 +88,22 @@ const MobileSidebar = ({ drawerOpen, closeDrawer }) => {
           >
             EMS
           </Typography>
-          {/* Close Button */}
-          <Box display="flex" justifyContent="flex-end" p={1}>
-            <IconButton
-              onClick={closeDrawer}
-              sx={{ color: (theme) => theme.palette.text.contrastText }}
-            >
-              <CloseIcon />
-            </IconButton>
-          </Box>
+          <IconButton
+            onClick={closeDrawer}
+            sx={{ color: (theme) => theme.palette.text.contrastText }}
+          >
+            <CloseIcon />
+          </IconButton>
         </Box>
 
         {/* Navigation Items */}
         <List sx={{ flexGrow: 1, px: 2 }}>
-          {menuItems.map((item) => {
+          {filteredMenuItems.map((item) => {
             const isSelected = selectedPath === item.path;
 
             return (
               <ListItem
-                button
+                // button
                 component={Link}
                 to={item.path}
                 key={item.text}

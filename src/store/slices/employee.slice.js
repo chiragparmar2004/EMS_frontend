@@ -8,6 +8,21 @@ const initialState = {
     error: null,
     loading: false,
   },
+  absentEmployees: {
+    data: [],
+    error: null,
+    loading: false,
+  },
+  employeeStats: {
+    data: null,
+    error: null,
+    loading: false,
+  },
+  absentEmployeesLast7Days: {
+    data: null,
+    error: null,
+    loading: false,
+  },
   employeesActions: {
     fetchAll: {
       data: [],
@@ -40,13 +55,21 @@ const initialState = {
 // Fetch all employees
 export const fetchEmployees = createAsyncThunk(
   "employee/fetchAll",
-  async (_, { rejectWithValue }) => {
+  async ({ page, limit, ...filterQuery }, { rejectWithValue }) => {
     try {
-      console.log("first");
-      const response = await apiRequest().get(`/employee`);
+      const queryParams = new URLSearchParams({
+        page,
+        limit,
+        ...filterQuery,
+      }).toString();
+
+      console.log("🚀 ~ queryParams:", queryParams);
+
+      const response = await apiRequest().get(`/employee?${queryParams}`);
       console.log("🚀 ~ response:", response);
       return response.data;
     } catch (error) {
+      console.log("🚀 ~ error:", error);
       return rejectWithValue(
         error.response?.data?.message ||
           "Fetching employees failed. Please try again."
@@ -54,6 +77,45 @@ export const fetchEmployees = createAsyncThunk(
     }
   }
 );
+
+// export const fetchEmployees = createAsyncThunk(
+//   "employee/fetchAll",
+//   async ({ page, limit, ...filterQuery }, { rejectWithValue }) => {
+//     try {
+//       // Ensure all filterQuery values are correctly stringified (arrays, objects, etc.)
+//       const sanitizedFilterQuery = Object.fromEntries(
+//         Object.entries(filterQuery).map(([key, value]) => {
+//           if (Array.isArray(value)) {
+//             return [key, JSON.stringify(value)]; // If it's an array, stringify it
+//           }
+//           return [key, value]; // Otherwise, use the value as is
+//         })
+//       );
+
+//       const queryParams = new URLSearchParams({
+//         page,
+//         limit,
+//         ...sanitizedFilterQuery,
+//       }).toString();
+
+//       console.log("🚀 ~ queryParams:", queryParams);
+
+//       const response = await apiRequest().get(`/employee?${queryParams}`);
+//       console.log("🚀 ~ response:", response);
+
+//       return response.data;
+//     } catch (error) {
+//       console.error("🚀 ~ error:", error);
+
+//       // Provide a fallback error message in case of missing response or server error
+//       return rejectWithValue(
+//         error.response?.data?.message ||
+//           error.message ||
+//           "Fetching employees failed. Please try again."
+//       );
+//     }
+//   }
+// );
 
 // Fetch an employee by ID
 export const fetchEmployeeById = createAsyncThunk(
@@ -95,7 +157,6 @@ export const updateEmployee = createAsyncThunk(
   "employee/update",
   async ({ id, ...employeeData }, { rejectWithValue }) => {
     try {
-      console.log("first here");
       const response = await apiRequest().put(`/employee/${id}`, employeeData);
       console.log("🚀 ~ response:", response);
       return response.data;
@@ -113,12 +174,70 @@ export const deleteEmployee = createAsyncThunk(
   "employee/delete",
   async (id, { rejectWithValue }) => {
     try {
-      await apiRequest().delete(`/employee/${id}`);
-      return id;
+      const response = await apiRequest().delete(`/employee/${id}`);
+      console.log("🚀 ~ response:", response);
+      return response;
     } catch (error) {
+      console.log("🚀 ~ error:", error);
       return rejectWithValue(
         error.response?.data?.message ||
           "Deleting employee failed. Please try again."
+      );
+    }
+  }
+);
+
+//fetch absent employees
+export const fetchAbsentEmployees = createAsyncThunk(
+  "employee/AbsentEmployees",
+  async ({ page, limit }, { rejectWithValue }) => {
+    console.log("🚀 ~ page, limit:", page, limit);
+    try {
+      const response = await apiRequest().get(
+        `/employee/getAbsentEmployees?page=${page}&limit=${limit}`
+      );
+      return response.data;
+    } catch (error) {
+      console.log("🚀 ~ error:", error);
+      return rejectWithValue(
+        error.response?.data?.message ||
+          "getting absent employees failed. Please try again."
+      );
+    }
+  }
+);
+
+//fetch employee stats
+export const fetchEmployeeStats = createAsyncThunk(
+  "employee/EmployeeStats",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await apiRequest().get(`/employee/getEmployeeStats`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message ||
+          "getting employee stats failed. Please try again."
+      );
+    }
+  }
+);
+
+//fetch absent employees last 7 days
+export const fetchAbsentEmployeesLast7Days = createAsyncThunk(
+  "employee/AbsentEmployeesLast7Days",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await apiRequest().get(
+        `/employee/getAbsentEmployeesLast7Days`
+      );
+      console.log("🚀 ~response:", response);
+
+      return response.data.absentData;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message ||
+          "getting absent employee of last 7 days failed. Please try again."
       );
     }
   }
@@ -169,7 +288,7 @@ const employeeSlice = createSlice({
       .addCase(addEmployee.fulfilled, (state, action) => {
         state.employeesActions.create.loading = false;
         state.employeesActions.create.data = action.payload;
-        state.employees.data.push(action.payload);
+        //state.employees.data.push(action.payload);
       })
       .addCase(addEmployee.rejected, (state, action) => {
         state.employeesActions.create.loading = false;
@@ -180,20 +299,8 @@ const employeeSlice = createSlice({
         state.employeesActions.update.loading = true;
         state.employeesActions.update.error = null;
       })
-      .addCase(updateEmployee.fulfilled, (state, action) => {
+      .addCase(updateEmployee.fulfilled, (state) => {
         state.employeesActions.update.loading = false;
-        console.log("🚀 ~ updateEmployee.fulfilled ~ action", action);
-        console.log(
-          "🚀 ~ updateEmployee.fulfilled ~ action",
-          state.employees.data
-        );
-
-        const index = state.employees.data.findIndex(
-          (employee) => employee._id === action.payload._id
-        );
-        if (index !== -1) {
-          state.employees.data[index] = action.payload;
-        }
       })
       .addCase(updateEmployee.rejected, (state, action) => {
         state.employeesActions.update.loading = false;
@@ -206,13 +313,54 @@ const employeeSlice = createSlice({
       })
       .addCase(deleteEmployee.fulfilled, (state, action) => {
         state.employeesActions.delete.loading = false;
-        state.employees.data = state.employees.data.filter(
-          (employee) => employee._id !== action.payload
-        );
+        // state.employees.data = state.employees.data.filter(
+        //   (employee) => employee._id !== action.payload
+        // );
       })
       .addCase(deleteEmployee.rejected, (state, action) => {
         state.employeesActions.delete.loading = false;
         state.employeesActions.delete.error = action.payload;
+      })
+
+      //get absent employees
+      .addCase(fetchAbsentEmployees.pending, (state) => {
+        state.absentEmployees.loading = true;
+        state.absentEmployees.error = null;
+      })
+      .addCase(fetchAbsentEmployees.fulfilled, (state, action) => {
+        state.absentEmployees.loading = false;
+        state.absentEmployees.data = action.payload;
+      })
+      .addCase(fetchAbsentEmployees.rejected, (state, action) => {
+        state.absentEmployees.loading = false;
+        state.absentEmployees.error = action.payload;
+      })
+
+      //get employee stats
+      .addCase(fetchEmployeeStats.pending, (state) => {
+        state.employeeStats.loading = true;
+        state.employeeStats.error = null;
+      })
+      .addCase(fetchEmployeeStats.fulfilled, (state, action) => {
+        state.employeeStats.loading = false;
+        state.employeeStats.data = action.payload;
+      })
+      .addCase(fetchEmployeeStats.rejected, (state, action) => {
+        state.employeeStats.loading = false;
+        state.employeeStats.error = action.payload;
+      })
+      //get absent employees last 7 days
+      .addCase(fetchAbsentEmployeesLast7Days.pending, (state) => {
+        state.absentEmployeesLast7Days.loading = true;
+        state.absentEmployeesLast7Days.error = null;
+      })
+      .addCase(fetchAbsentEmployeesLast7Days.fulfilled, (state, action) => {
+        state.absentEmployeesLast7Days.loading = false;
+        state.absentEmployeesLast7Days.data = action.payload;
+      })
+      .addCase(fetchAbsentEmployeesLast7Days.rejected, (state, action) => {
+        state.absentEmployeesLast7Days.loading = false;
+        state.absentEmployeesLast7Days.error = action.payload;
       });
   },
 });

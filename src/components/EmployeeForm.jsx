@@ -86,7 +86,7 @@ const EmployeeForm = ({ isEdit, setIsEditing, initialData, employeeId }) => {
               severity: "success",
             })
           );
-          navigate("/employeePage");
+          navigate("/employees");
         } else {
           dispatch(
             showSnackbar({
@@ -125,7 +125,7 @@ const EmployeeForm = ({ isEdit, setIsEditing, initialData, employeeId }) => {
           {isEdit ? "Edit Employee" : "Add New Employee"}
         </Typography>
         <Box component="form" onSubmit={formik.handleSubmit} sx={{ p: 2 }}>
-          <Grid container spacing={2}>
+          <Grid container spacing={2} display="flex" justifyContent="center">
             {/* Personal Information */}
             <Grid item size={{ xs: 12 }}>
               <Typography variant="h6">Personal Information</Typography>
@@ -290,16 +290,18 @@ const EmployeeForm = ({ isEdit, setIsEditing, initialData, employeeId }) => {
               />
             </Grid>
             {/* Buttons */}
-            <Grid item size={{ xs: 12, sm: 6 }}>
-              <Button
-                variant="outlined"
-                onClick={() => navigate("/employeePage")}
-                fullWidth
-              >
-                Back
-              </Button>
-            </Grid>
-            <Grid item size={{ xs: 12, sm: 6 }}>
+            {isEdit && (
+              <Grid item size={{ xs: 12, sm: 6 }}>
+                <Button
+                  variant="outlined"
+                  onClick={() => setIsEditing((prev) => !prev)}
+                  fullWidth
+                >
+                  Cancel
+                </Button>
+              </Grid>
+            )}
+            <Grid item size={{ xs: 12, sm: 6 }} sx={{ width: "100%" }}>
               <Button
                 variant="contained"
                 color="primary"

@@ -17,6 +17,8 @@ import AdminLeavePage from "./pages/AdminLeavePage";
 import EmployeeLeavePage from "./pages/EmployeeLeavePage";
 import AddLeavePage from "./pages/AddLeavePage";
 import ViewOrUpdateLeavePage from "./pages/ViewOrUpdateLeavePage";
+import AllEmployeeSalaryPage from "./pages/AllEmployeeSalaryPage";
+import ProfilePage from "./pages/ProfilePage";
 
 function App() {
   const userRole = useSelector((state) => state.user.user?.data?.role);
@@ -64,13 +66,17 @@ function App() {
       element: <ProtectedLayout />,
       errorElement: <ErrorPage />,
       children: [
-        { path: "/dashboard", element: getDashboardPage() }, // Dynamically render based on role
+        { path: "/dashboard", element: getDashboardPage() },
         { path: "/employees", element: <EmployeePage /> },
         { path: "/leaves", element: getLeavePage() },
-        { path: "//add-leave", element: <AddLeavePage /> },
+        { path: "/change-password", element: <PasswordCreationPage /> },
+        { path: "/add-leave", element: <AddLeavePage /> },
         { path: "/request-leave", element: <AddLeavePage /> },
         { path: "/add-employee", element: <AddEmployeePage /> },
+        { path: "/all-emp-salary", element: <AllEmployeeSalaryPage /> },
         { path: "/view-update-employee/:id", element: <ViewOrUpdatePage /> },
+        { path: "/profile", element: <ProfilePage /> },
+
         { path: "/view-update-leave/:id", element: <ViewOrUpdateLeavePage /> },
       ],
     },

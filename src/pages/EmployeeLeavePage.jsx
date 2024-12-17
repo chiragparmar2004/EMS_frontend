@@ -11,25 +11,34 @@ import {
   Button,
   CircularProgress,
   Box,
+  Dialog,
+  DialogContent,
+  IconButton,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchLeavesByEmployee } from "../store/slices/leave.slice";
 import { format } from "date-fns";
+import CloseIcon from "@mui/icons-material/Close";
+import socket from "../lib/socket";
+import ViewOrUpdateLeavePage from "./ViewOrUpdateLeavePage"; // Adjust import path
 
 const EmployeeLeavePage = () => {
   const [employeeLeaves, setEmployeeLeaves] = useState([]);
-  console.log("🚀 ~ EmployeeLeavePage ~ employeeLeaves:", employeeLeaves);
-  const navigate = useNavigate();
+  const [isDialogOpen, setDialogOpen] = useState(false);
+  const [selectedLeaveId, setSelectedLeaveId] = useState(null);
 
+  const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { data, loading, error } = useSelector(
-    (state) => state.leave.leaveActions.fetchByEmployee
-  );
-  console.log("🚀 ~ EmployeeLeavePage ~ data:", data);
-  // const userData = useSelector((state) => state.user.user);
-  // console.log("🚀 ~ EmployeeLeavePage ~ userdata:", userData.data._id);
-  console.log("🚀 ~ AdminLeavePage ~ loading:", loading);
+
+  // const { data, loading, error } = useSelector(
+  //   (state) => state.leave.leaveActions.fetchByEmployee
+  // );
+
+  const LeaveData = useSelector((state) => state.leave);
+
+  const data = LeaveData.leaves.data;
+  const loading = LeaveData.leaves.loading;
 
   useEffect(() => {
     dispatch(fetchLeavesByEmployee()); // Fetch leaves when the component mounts
@@ -41,41 +50,35 @@ const EmployeeLeavePage = () => {
     }
   }, [data]);
 
-  // Mock Data for Employee Leaves
-  // useEffect(() => {
-  //   const mockEmployeeLeaves = [
-  //     {
-  //       id: 1,
-  //       status: "Approved",
-  //       startDate: "2024-11-10",
-  //       endDate: "2024-11-15",
-  //       leaveType: "Casual",
-  //     },
-  //     {
-  //       id: 2,
-  //       status: "Pending",
-  //       startDate: "2024-11-12",
-  //       endDate: "2024-11-14",
-  //       leaveType: "Sick",
-  //     },
-  //     {
-  //       id: 3,
-  //       status: "Rejected",
-  //       startDate: "2024-11-08",
-  //       endDate: "2024-11-09",
-  //       leaveType: "Other",
-  //     },
-  //   ];
-  //   setEmployeeLeaves(mockEmployeeLeaves);
-  // }, []);
+  // Handle real-time updates
+  useEffect(() => {
+    socket.on("leaveRequestModified", (updatedLeave) => {
+      dispatch(fetchLeavesByEmployee());
+    });
 
+    // Clean up the socket connection
+    return () => {
+      socket.off("leaveRequestModified");
+    };
+  }, []);
+
+  // Open the dialog and set the selected leave ID
   const handleViewLeaveDetails = (id) => () => {
-    navigate(`/view-update-leave/${id}`);
+    setSelectedLeaveId(id);
+    setDialogOpen(true);
   };
+
+  // Close the dialog
+  const handleCloseDialog = () => {
+    setSelectedLeaveId(null);
+    setDialogOpen(false);
+  };
+
   // Navigate to the Leave Request Form
   const handleRequestLeave = () => {
     navigate("/request-leave"); // Replace with the actual route for the LeaveRequestForm component
   };
+
   // Loading State
   if (loading) {
     return (
@@ -122,7 +125,7 @@ const EmployeeLeavePage = () => {
       </div>
 
       {/* Employee Leaves Table */}
-      <TableContainer component={Paper}>
+      <TableContainer>
         <Table>
           <TableHead>
             <TableRow>
@@ -149,17 +152,16 @@ const EmployeeLeavePage = () => {
                     days
                   </TableCell>
                   <TableCell>{leave.leaveType}</TableCell>
-
                   <TableCell style={{ textAlign: "center" }}>
                     <span
                       style={{
                         backgroundColor:
                           leave.status === "Approved"
-                            ? "#1be29a" // Green for approved
+                            ? "#1be29a"
                             : leave.status === "Pending"
-                            ? "#ffd166" // Yellow for pending
-                            : "#e63946", // Red for rejected
-                        color: "#000", // Text color
+                            ? "#ffd166"
+                            : "#e63946",
+                        color: "#000",
                         textAlign: "center",
                         borderRadius: "4px",
                         padding: "4px 8px",
@@ -189,6 +191,49 @@ const EmployeeLeavePage = () => {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Dialog for Leave Details */}
+      <Dialog
+        open={isDialogOpen}
+        onClose={handleCloseDialog}
+        fullWidth
+        sx={{
+          "& .MuiPaper-root": {
+            backgroundColor: "background.default",
+            color: "text.primary",
+            borderRadius: 3,
+            boxShadow: 4,
+          },
+        }}
+      >
+        <IconButton
+          onClick={handleCloseDialog}
+          aria-label="close"
+          sx={{
+            position: "absolute",
+            top: 8,
+            right: 8,
+            zIndex: 1300,
+            scale: 1.25,
+            color: "text.primary",
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
+        <DialogContent
+          sx={{
+            padding: 3,
+            backgroundColor: "background.paper",
+          }}
+        >
+          {selectedLeaveId && (
+            <ViewOrUpdateLeavePage
+              leaveId={selectedLeaveId}
+              handleCloseDialog={handleCloseDialog}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -1,13 +1,14 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Box,
   Typography,
   Card,
   CardContent,
-  Grid,
   CircularProgress,
 } from "@mui/material";
+import Grid from "@mui/material/Grid2"; // Grid v2
+
 import { fetchMonthlyStats } from "../store/slices/leave.slice";
 
 const EmployeeDashboardPage = () => {
@@ -17,6 +18,7 @@ const EmployeeDashboardPage = () => {
   const { data, loading, error } = useSelector(
     (state) => state.leave.leaveActions.fetchMonthlyStats
   );
+  console.log("🚀 ~ EmployeeDashboardPage ~ data:", data);
 
   useEffect(() => {
     dispatch(fetchMonthlyStats());
@@ -55,78 +57,52 @@ const EmployeeDashboardPage = () => {
   }
 
   return (
-    <Box sx={{ padding: 3 }}>
+    <Box sx={{ flexGrow: 1, padding: 3 }}>
       <Typography variant="h4" fontWeight="bold" gutterBottom>
         Employee Dashboard
       </Typography>
-      <Grid
-        container
-        spacing={3}
-        justifyContent="center"
-        alignItems="center"
-        sx={{
-          gap: 3, // Adds space between grid items
-        }}
-      >
-        {/* Total Leave Card */}
-        <Grid
-          item
-          sx={{
-            width: "300px", // Fixed width
-            height: "200px", // Fixed height
-          }}
-        >
+
+      <Grid container spacing={2} justifyContent="start">
+        {/* Total Leaves Card */}
+        <Grid item xs={12} sm={6} md={4}>
           <Card
             sx={{
-              borderRadius: 2,
-              boxShadow: 2,
-              backgroundColor: "#000e32",
+              display: "flex",
+              flexDirection: "column",
               textAlign: "center",
-              height: "100%",
+              p: 3,
+              width: 250,
+              background: (theme) => theme.palette.background.paper,
             }}
           >
             <CardContent>
-              <Typography variant="h3" color="textSecondary">
-                Total Leaves
+              <Typography variant="h6" gutterBottom>
+                This month total Leaves
               </Typography>
-              <Typography
-                variant="h3"
-                color="primary"
-                fontWeight="bold"
-                sx={{ textAlign: "center", marginTop: 2 }}
-              >
+              <Typography variant="h4" color="primary">
                 {data?.totalLeaves || 0}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
 
-        {/* This Month's Leave Card */}
-        <Grid
-          item
-          sx={{
-            width: "300px", // Fixed width
-            height: "200px", // Fixed height
-          }}
-        >
+        {/* Approved Leaves Card */}
+        <Grid item xs={12} sm={6} md={4}>
           <Card
             sx={{
-              borderRadius: 2,
-              boxShadow: 2,
+              display: "flex",
+              flexDirection: "column",
+              p: 3,
+              width: 250,
               textAlign: "center",
-              height: "100%",
+              background: (theme) => theme.palette.background.paper,
             }}
           >
             <CardContent>
-              <Typography variant="h6" color="textSecondary">
-                This Month's Leaves
+              <Typography variant="h6" gutterBottom>
+                This month Approved Leaves
               </Typography>
-              <Typography
-                variant="h2"
-                color="primary"
-                fontWeight="bold"
-                sx={{ textAlign: "center", marginTop: 2 }}
-              >
+              <Typography variant="h4" color="primary">
                 {data?.approvedLeaves || 0}
               </Typography>
             </CardContent>

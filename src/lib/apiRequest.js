@@ -3,8 +3,6 @@ import axios from "axios";
 import getUserToken from "./getUserToken";
 const apiRequest = () => {
   const token = getUserToken();
-  console.log("🚀 ~ apiRequest ~ token:", token);
-  console.log("🚀 ~ apiRequest ~ token:", token);
   const instance = axios.create({
     baseURL: `${import.meta.env.VITE_REACT_APP_SERVER_URL}/api`,
     //withCredentials: true,

@@ -16,6 +16,9 @@ import {
   useMediaQuery,
   IconButton,
   Drawer,
+  AppBar,
+  Toolbar,
+  Typography,
 } from "@mui/material";
 // import { Menu as MenuIcon } from "@mui/icons-material";
 import { Menu as MenuIcon, Close as CloseIcon } from "@mui/icons-material"; // Import CloseIcon
@@ -242,16 +245,113 @@ const Layout = () => {
 //   );
 // };
 
+// const ProtectedLayout = () => {
+//   const { isAuthenticated } = useSelector((state) => state.user.user);
+//   const dispatch = useDispatch();
+//   const { open, message, severity } = useSelector((state) => state.snackbar);
+
+//   // Media query to detect mobile screen size
+//   const isMobile = useMediaQuery((theme) => theme.breakpoints.down("sm"));
+
+//   // State to handle drawer (hamburger menu) open/close
+//   const [drawerOpen, setDrawerOpen] = useState(false);
+
+//   const handleSnackbarClose = () => {
+//     dispatch(hideSnackbar());
+//   };
+
+//   const handleDrawerToggle = () => {
+//     setDrawerOpen(!drawerOpen);
+//   };
+
+//   if (!isAuthenticated) {
+//     return <Navigate to="/login" replace />;
+//   }
+
+//   return (
+//     <Box display="flex" flexDirection="column" minHeight="100vh">
+//       <CssBaseline />
+
+//       {/* Navbar */}
+//       <Box
+//         component="header"
+//         height="60px"
+//         width="100%"
+//         position="fixed"
+//         zIndex={10}
+//       >
+//         {/* Mobile Navbar with Hamburger Menu */}
+//         {isMobile && (
+//           <Box
+//             component="header"
+//             position="fixed"
+//             top={0}
+//             left={0}
+//             zIndex={11}
+//             display="flex"
+//             justifyContent="flex-start"
+//             alignItems="center"
+//             height="60px"
+//             pr={2}
+//           >
+//             <IconButton onClick={handleDrawerToggle} color="inherit">
+//               <MenuIcon />
+//             </IconButton>
+//           </Box>
+//         )}
+
+//         <Navbar />
+//       </Box>
+
+//       {/* Sidebar for mobile */}
+
+//       {/* Sidebar for desktop */}
+
+//       <Box
+//         component="main"
+//         flexGrow={1}
+//         display="flex"
+//         flexDirection="column"
+//         pt="60px"
+//       >
+//         <Box display="flex" flexDirection="row" height="100%" width="100%">
+//           {isMobile && (
+//             <MobileSidebar
+//               drawerOpen={drawerOpen}
+//               closeDrawer={handleDrawerToggle}
+//             />
+//           )}
+//           {!isMobile && <Sidebar />}
+//           <Box flexGrow={1} overflow="hidden">
+//             <Outlet />
+//           </Box>
+//         </Box>
+//       </Box>
+
+//       {/* Snackbar */}
+//       <Snackbar
+//         open={open}
+//         autoHideDuration={3000}
+//         onClose={handleSnackbarClose}
+//         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+//       >
+//         <Alert onClose={handleSnackbarClose} severity={severity}>
+//           {message}
+//         </Alert>
+//       </Snackbar>
+//     </Box>
+//   );
+// };
+
+// export default ProtectedLayout;
+
 const ProtectedLayout = () => {
+  const drawerWidth = 240;
   const { isAuthenticated } = useSelector((state) => state.user.user);
-  const dispatch = useDispatch();
   const { open, message, severity } = useSelector((state) => state.snackbar);
+  const dispatch = useDispatch();
 
-  // Media query to detect mobile screen size
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down("sm"));
-  console.log("🚀 ~ ProtectedLayout ~ isMobile:", isMobile);
-
-  // State to handle drawer (hamburger menu) open/close
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const handleSnackbarClose = () => {
@@ -267,79 +367,55 @@ const ProtectedLayout = () => {
   }
 
   return (
-    <Box display="flex" flexDirection="column" minHeight="100vh">
+    <Box sx={{ display: "flex", height: "100vh" }}>
       <CssBaseline />
 
       {/* Navbar */}
-      <Box
-        component="header"
-        height="60px"
-        width="100%"
+      <AppBar
         position="fixed"
-        zIndex={10}
+        sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
       >
-        {/* Mobile Navbar with Hamburger Menu */}
-        {isMobile && (
-          <Box
-            component="header"
-            position="fixed"
-            top={0}
-            left={0}
-            zIndex={11}
-            display="flex"
-            justifyContent="flex-start"
-            alignItems="center"
-            height="60px"
-            pr={2}
-          >
-            <IconButton onClick={handleDrawerToggle} color="inherit">
-              <MenuIcon />
-            </IconButton>
-          </Box>
-        )}
+        <Navbar isMobile={isMobile} handleDrawerToggle={handleDrawerToggle} />
+      </AppBar>
 
-        <Navbar />
-      </Box>
+      {/* Sidebar */}
+      <Drawer
+        variant={isMobile ? "temporary" : "permanent"}
+        open={drawerOpen}
+        onClose={handleDrawerToggle}
+        ModalProps={{
+          keepMounted: true, // Better performance on mobile
+        }}
+        sx={{
+          width: drawerWidth,
+          flexShrink: 0,
+          [`& .MuiDrawer-paper`]: {
+            width: drawerWidth,
+            boxSizing: "border-box",
+          },
+        }}
+      >
+        <Toolbar />
+        <Box sx={{ overflow: "auto", padding: 2 }}>
+          {/* <Typography>Sidebar Content</Typography> */}
+          <Sidebar />
+        </Box>
+      </Drawer>
 
-      {/* Sidebar for mobile */}
-
-      {/* Sidebar for desktop */}
-
+      {/* Main Content */}
       <Box
         component="main"
-        flexGrow={1}
-        display="flex"
-        flexDirection="column"
-        p={2}
-        pt="60px"
-        overflow="auto"
-      >
-        <Box display="flex" flexDirection="row">
-          {isMobile && (
-            <MobileSidebar
-              drawerOpen={drawerOpen}
-              closeDrawer={handleDrawerToggle}
-            />
-          )}
-          {!isMobile && <Sidebar />}
-          <Outlet />
-        </Box>
-      </Box>
+        sx={{
+          flexGrow: 1,
+          padding: 2,
+          marginTop: (theme) =>
+            isMobile ? theme.spacing(6) : theme.spacing(8),
 
-      {/* Main content area */}
-      {/* <Box
-        component="main"
-        flexGrow={1}
-        display="flex"
-        flexDirection="column"
-        p={2}
-        pt="60px"
-        overflow="auto"
+          overflow: "auto",
+        }}
       >
-        <Box display="flex" flexDirection="row">
-          <Outlet />
-        </Box>
-      </Box> */}
+        <Outlet />
+      </Box>
 
       {/* Snackbar */}
       <Snackbar
@@ -355,8 +431,6 @@ const ProtectedLayout = () => {
     </Box>
   );
 };
-
-// export default ProtectedLayout;
 
 export { ProtectedLayout };
 export default Layout;

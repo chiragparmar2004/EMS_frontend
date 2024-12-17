@@ -3,7 +3,7 @@ import apiRequest from "../../lib/apiRequest";
 
 const initialState = {
   leaves: {
-    data: [],
+    data: {},
     error: null,
     loading: false,
     monthlyStats: {
@@ -28,6 +28,17 @@ const initialState = {
       loading: false,
     },
     fetchMonthlyStats: {
+      data: null,
+      error: null,
+      loading: false,
+    },
+
+    fetchPendingLeaves: {
+      data: null,
+      error: null,
+      loading: false,
+    },
+    fetchLeaveByStatus: {
       data: null,
       error: null,
       loading: false,
@@ -57,21 +68,19 @@ const initialState = {
       error: null,
       loading: false,
     },
-
-    approveReject: {
-      data: null,
-      error: null,
-      loading: false,
-    },
   },
 };
 
 // Thunks
 export const fetchAllLeaves = createAsyncThunk(
   "leave/fetchAll",
-  async (_, { rejectWithValue }) => {
+  async ({ page = 1, limit = 10 }, { rejectWithValue }) => {
     try {
-      const response = await apiRequest().get(`/leave/admin/all`);
+      const response = await apiRequest().get(
+        `/leave/admin/all?page=${page}&limit=${limit}`
+      );
+      console.log("🚀 ~ response:", response);
+
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -163,6 +172,7 @@ export const updateLeave = createAsyncThunk(
   async ({ leaveId, leaveData }, { rejectWithValue }) => {
     try {
       const response = await apiRequest().put(`/leave/${leaveId}`, leaveData);
+      console.log("🚀 ~ response leave/update:", response);
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -200,6 +210,22 @@ export const fetchMonthlyStats = createAsyncThunk(
   }
 );
 
+export const fetchLeaveByStatus = createAsyncThunk(
+  "leave/fetchLeaveByStatus",
+  async ({ status, page, limit }, { rejectWithValue }) => {
+    try {
+      const response = await apiRequest().get("/leave/leaveByStatus", {
+        params: { status, page, limit },
+      });
+      console.log("🚀 ~ response ~ response:", response);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Fetching leaves by status failed."
+      );
+    }
+  }
+);
 // Slice
 const leaveSlice = createSlice({
   name: "leave",
@@ -222,11 +248,15 @@ const leaveSlice = createSlice({
         state.leaveActions.fetchAll.loading = false;
         state.leaveActions.fetchAll.data = action.payload;
         state.leaveActions.fetchAll.error = null;
+
+        // Add the new leave to the leaves data
+        state.leaves.data.push(action.payload);
       })
       .addCase(fetchAllLeaves.rejected, (state, action) => {
         state.leaveActions.fetchAll.loading = false;
         state.leaveActions.fetchAll.error = action.payload;
       })
+
       // Fetch Leaves by Employee
       .addCase(fetchLeavesByEmployee.pending, (state) => {
         state.leaveActions.fetchByEmployee.loading = true;
@@ -235,6 +265,10 @@ const leaveSlice = createSlice({
         state.leaveActions.fetchByEmployee.loading = false;
         state.leaveActions.fetchByEmployee.data = action.payload;
         state.leaveActions.fetchByEmployee.error = null;
+
+        console.log("🚀 ~ .chirag addCase ~ action.payload:", action.payload);
+        // Add the new leave to the leaves data
+        state.leaves.data = action.payload;
       })
       .addCase(fetchLeavesByEmployee.rejected, (state, action) => {
         state.leaveActions.fetchByEmployee.loading = false;
@@ -264,6 +298,7 @@ const leaveSlice = createSlice({
         state.leaveActions.create.data = action.payload;
         state.leaveActions.create.error = null;
       })
+
       .addCase(createLeave.rejected, (state, action) => {
         state.leaveActions.create.loading = false;
         state.leaveActions.create.error = action.payload;
@@ -287,11 +322,29 @@ const leaveSlice = createSlice({
       .addCase(updateLeave.pending, (state) => {
         state.leaveActions.update.loading = true;
       })
+
       .addCase(updateLeave.fulfilled, (state, action) => {
         state.leaveActions.update.loading = false;
         state.leaveActions.update.data = action.payload;
         state.leaveActions.update.error = null;
+        // Update the specific leave in the leaves data
+        if (state.leaves.data && state.leaves.data.leaves) {
+          const index = state.leaves.data.leaves.findIndex(
+            (leave) => leave._id === action.payload.leave._id
+          );
+          if (index !== -1) {
+            state.leaves.data.leaves[index] = action.payload.leave;
+          }
+        } else if (state.leaves.data) {
+          const index = state.leaves.data.findIndex(
+            (leave) => leave._id === action.payload.leave._id
+          );
+          if (index !== -1) {
+            state.leaves.data[index] = action.payload.leave;
+          }
+        }
       })
+
       .addCase(updateLeave.rejected, (state, action) => {
         state.leaveActions.update.loading = false;
         state.leaveActions.update.error = action.payload;
@@ -301,10 +354,16 @@ const leaveSlice = createSlice({
       .addCase(deleteLeave.pending, (state) => {
         state.leaveActions.delete.loading = true;
       })
+      // Delete Leave
       .addCase(deleteLeave.fulfilled, (state, action) => {
         state.leaveActions.delete.loading = false;
         state.leaveActions.delete.data = action.payload;
         state.leaveActions.delete.error = null;
+
+        // Remove the leave from the leaves data
+        state.leaves.data = state.leaves.data.filter(
+          (leave) => leave.id !== action.meta.arg
+        );
       })
       .addCase(deleteLeave.rejected, (state, action) => {
         state.leaveActions.delete.loading = false;
@@ -333,26 +392,56 @@ const leaveSlice = createSlice({
         state.leaveActions.updateStatus.loading = false;
         state.leaveActions.updateStatus.data = action.payload;
         state.leaveActions.updateStatus.error = null;
-
-        // Optional: Update the specific leave in the fetchAll or fetchById if already fetched
-        // if (
-        //   state.leaveActions.fetchById.data &&
-        //   state.leaveActions.fetchById.data._id === action.payload.leave._id
-        // ) {
-        //   state.leaveActions.fetchById.data = action.payload.leave;
-        // }
-        // if (state.leaveActions.fetchAll.data.length) {
-        //   const leaveIndex = state.leaveActions.fetchAll.data.findIndex(
-        //     (leave) => leave._id === action.payload.leave._id
-        //   );
-        //   if (leaveIndex !== -1) {
-        //     state.leaveActions.fetchAll.data[leaveIndex] = action.payload.leave;
-        //   }
-        // }
+        console.log(
+          "🚀 ~ .addCase ~ action.payload:",
+          action.payload.leave._id
+        );
+        //for main data
+        const index = state.leaves.data.leaves.findIndex(
+          (leave) => leave._id === action.payload.leave._id
+        );
+        console.log("🚀 ~ .addCase ~ index:", index);
+        if (index !== -1) {
+          state.leaves.data.leaves[index].status = action.payload.status;
+        }
+        console.log("tts", state.leaveActions.fetchPendingLeaves);
+        const pendingDataIndex =
+          state.leaveActions.fetchPendingLeaves.data.leaves.findIndex(
+            (leave) => leave._id === action.payload.leave._id
+          );
+        if (pendingDataIndex !== -1) {
+          state.leaveActions.fetchPendingLeaves.data.leaves.splice(
+            pendingDataIndex,
+            1
+          );
+        }
       })
+
       .addCase(updateLeaveStatus.rejected, (state, action) => {
         state.leaveActions.updateStatus.loading = false;
         state.leaveActions.updateStatus.error = action.payload;
+      })
+
+      //fetch leave by status
+      .addCase(fetchLeaveByStatus.pending, (state) => {
+        state.leaveActions.fetchLeaveByStatus.loading = true;
+      })
+      .addCase(fetchLeaveByStatus.fulfilled, (state, action) => {
+        state.leaveActions.fetchLeaveByStatus.loading = false;
+        state.leaveActions.fetchLeaveByStatus.data = action.payload;
+        state.leaveActions.fetchLeaveByStatus.error = null;
+        console.log("🚀 ~ .addCase ~ action.payload:", action.payload);
+        //add to the leaves data
+        state.leaves.data = action.payload;
+
+        //add to particular pending leaves data
+        if (action.payload.status === "Pending") {
+          state.leaveActions.fetchPendingLeaves.data = action.payload;
+        }
+      })
+      .addCase(fetchLeaveByStatus.rejected, (state, action) => {
+        state.leaveActions.fetchLeaveByStatus.loading = false;
+        state.leaveActions.fetchLeaveByStatus.error = action.payload;
       });
   },
 });
