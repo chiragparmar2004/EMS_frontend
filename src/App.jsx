@@ -22,7 +22,7 @@ import ProfilePage from "./pages/ProfilePage";
 
 function App() {
   const userRole = useSelector((state) => state.user.user?.data?.role);
-
+  console.log("working")
   // Role-based dashboard
   const getDashboardPage = () => {
     if (userRole === "admin") {
