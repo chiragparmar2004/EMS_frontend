@@ -22,7 +22,7 @@ import ProfilePage from "./pages/ProfilePage";
 
 function App() {
   const userRole = useSelector((state) => state.user.user?.data?.role);
-
+  console.log("working")
   // Role-based dashboard
   const getDashboardPage = () => {
     if (userRole === "admin") {
@@ -74,8 +74,8 @@ function App() {
         { path: "/request-leave", element: <AddLeavePage /> },
         { path: "/add-employee", element: <AddEmployeePage /> },
         { path: "/all-emp-salary", element: <AllEmployeeSalaryPage /> },
-        { path: "/view-update-employee/:id", element: <ViewOrUpdatePage /> },
-        { path: "/profile", element: <ProfilePage /> },
+        // { path: "/view-update-employee/:id", element: <ViewOrUpdatePage /> },
+        // { path: "/profile", element: <ProfilePage /> },
 
         { path: "/view-update-leave/:id", element: <ViewOrUpdateLeavePage /> },
       ],
